@@ -21,8 +21,15 @@ class  PayWizard(models.TransientModel):
 
     def action_create_payments(self):
         # need to add methods to create payment record in db
-        pay_req_obj = self.env['payment.request'].search([('id','=',self.pay_request_id.id)])
-        if pay_req_obj:
-            pay_req_obj.write({
+        pay_req_objs = self.env['payment.request'].search([('id','=',self.pay_request_id.id)],limit=1)
+        if self.pay_request_id.source_type =='sfc':
+            sfc_objs = self.env['student.faculty'].search([('id','=',self.pay_request_id.sfc_source.id)],limit=1)
+            if sfc_objs:
+                sfc_objs[0].write({
+                    'state':'paid'
+                })
+        if pay_req_objs:
+            pay_req_objs[0].write({
                 'state':'paid',
             })
+        

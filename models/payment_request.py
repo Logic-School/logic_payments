@@ -2,9 +2,9 @@ from odoo  import fields, api, models
 
 class PaymentRequest(models.Model):
     _name = "payment.request"
-    source_type = fields.Selection(selection=[('advance','Advance'),('sfc','Student Faculty')],string="Source Type")
+    source_type = fields.Selection(selection=[('other','Other'),('advance','Advance'),('sfc','Student Faculty Club')],string="Source Type")
     sfc_source = fields.Many2one('student.faculty',string="SFC Source")
-    source_user = fields.Many2one('res.users',string="Source User")
+    source_user = fields.Many2one('res.users',string="Source User", default=lambda self: self.env.user)
     amount = fields.Monetary(string="Amount")
     payment_expect_date = fields.Date(string="Expected Date")
     payment_date = fields.Date(string="Date of Payment", readonly=True)
@@ -46,3 +46,6 @@ class PaymentRequest(models.Model):
         }
     def reject_payment(self):
         self.state = 'reject'
+        self.sfc_source.write({
+            'state':'reject'
+        })

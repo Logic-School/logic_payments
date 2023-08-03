@@ -19,19 +19,20 @@ class PaymentRequest(models.Model):
             default=lambda
             self: self.env.user.company_id.currency_id.id,
             readonly=True)
-    def _compute_state(self):
-        for record in self:
-            if not record.state:
-                record.state = 'submit_payment'
-            else:
-                record.state = record.state
-    state = fields.Selection(string="State",selection=[('submit_payment','Submitted For Payment'),('paid','Paid'),('reject','Reject')], compute = "_compute_state")
+
+    state = fields.Selection(string="State",selection=[('submit_payment','Submitted For Payment'),('paid','Paid'),('reject','Reject')])
     description = fields.Text(string="Description")
     account_name = fields.Char(string="Account Name")
     account_no = fields.Char(string="Account No")
     ifsc_code = fields.Char(string="IFSC Code")
     bank_name = fields.Char(string="Bank Name")
     bank_branch = fields.Char(string="Bank Branch")
+
+    @api.model
+    def create(self, vals):
+        vals['state'] = 'submit_payment'
+        result = super(PaymentRequest, self).create(vals)
+        return result
 
     def register_payment(self):
         # Display a popup with the entered details
@@ -44,4 +45,4 @@ class PaymentRequest(models.Model):
             'context': {'amount': self.amount,'pay_request_id':self.id}
         }
     def reject_payment(self):
-        pass
+        self.state = 'reject'

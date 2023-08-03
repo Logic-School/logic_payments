@@ -36,13 +36,17 @@ class PaymentRequest(models.Model):
 
     def register_payment(self):
         # Display a popup with the entered details
+        if self.sfc_source:
+            partner_type = 'student'
+        else:
+            partner_type = False
         return {
             'type': 'ir.actions.act_window',
             'name': 'Register Payment',
             'res_model': 'payment.register.wizard',
             'view_mode': 'form',
             'target': 'new',
-            'context': {'amount': self.amount,'pay_request_id':self.id}
+            'context': {'amount': self.amount,'payment_request_id':self.id,'partner_type':partner_type}
         }
     def reject_payment(self):
         self.state = 'reject'

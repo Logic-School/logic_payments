@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record model="ir.actions.act_window" id="details_payment_request_action">
+        <field name="name">Payments</field>
+        <field name="res_model">payment.request</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem name="Payments" id="menu_payment_request"
+              action="details_payment_request_action"
+              sequence="6"/>
+    <menuitem name="Payments" id="menu_payment_request_1"
+              action="details_payment_request_action"
+              parent="menu_payment_request"
+              sequence="1"/>
+
+
+    <record id="payment_request_tree_view" model="ir.ui.view">
+        <field name="name">Payments</field>
+        <field name="model">payment.request</field>
+        <field name="type">tree</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="sfc_source"/>
+                <field name="source_user"/>
+                <field name="amount"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="payment_request_form_view" model="ir.ui.view">
+        <field name="name">Payment Request</field>
+        <field name="model">payment.request</field>
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+            <form string="Payment Request">
+                <header>
+                    <!-- <button name="submit_for_payment" groups="faculty.coordinator_user" string="Submit for Payment" help="Click here to submit the draft for payment" type="object" class="oe_highlight" attrs="{'invisible':[('state','!=','draft')]}"/> -->
+                    <button name="register_payment" groups="faculty.group_accounting_manager" string="Register Payment" help="Click here to register the payment record" type="object" class="oe_highlight" attrs="{'invisible':[('state','!=','submit_payment')]}"/>
+                    <button name="reject_payment" groups="faculty.group_accounting_manager" string="Reject" help="Click here to pay the total amount" type="object" class="btn-danger" attrs="{'invisible':[('state','!=','submit_payment')]}"/>
+                    <!-- <button name="reset_to_draft" string="Reset to Draft" help="Click here to reset the record to draft state" type="object" class="btn-warning" attrs="{'invisible':[('state','!=','submit_payment')]}"/> -->
+                    <field name="state" widget="statusbar" statusbar_visible="submit_payment,paid,reject"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" text="PAID" bg_color="bg-success" attrs="{'invisible':[('state','!=','paid')]}"/>
+                    <widget name="web_ribbon" text="REJECTED" bg_color="bg-danger" attrs="{'invisible':[('state','!=','reject')]}"/>
+                    <group>
+                        <group>
+                            <field name="source_type"/>
+                            <field name="sfc_source" attrs="{'invisible':[('source_type','!=','sfc')]}"/>
+                            <field name="source_user"/>
+                            <field name="description"/>
+                        </group>
+                        <group>
+                            <field name="payment_expect_date"/>
+                            <field name="payment_date"/>
+                        </group>
+                    </group>
+                    <group>
+                        <notebook>
+                            <page string="Banking Details">
+                                <group>
+                                    <group>
+                                        <field name="account_name" help="Enter the account holder's name here(as in Passbook)"/>
+                                        <field name="account_no"/>
+                                        <field name="bank_name"/>
+                                        <field name="ifsc_code"/>
+                                        <field name="bank_branch"/>
+                                        <field name="currency_id" invisible="1"/>
+                                    </group>
+                                    <group name="note_group" col="6" class="mt-2 mt-md-0">
+                                        <group class="oe_subtotal_footer oe_right" colspan="2">
+                                            <div class="oe_subtotal_footer_separator oe_inline o_td_label">
+                                                <label for="amount"/>
+                                            </div>
+                                            <field name="amount" nolabel="1" class="oe_subtotal_footer_separator" widget="monetary"/>
+                                        </group>
+                                        <div class="oe_clear"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

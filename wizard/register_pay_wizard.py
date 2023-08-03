@@ -18,7 +18,7 @@ class  PayWizard(models.TransientModel):
     amount = fields.Monetary(string="Amount",default=lambda self: self._context.get('amount'))
     date = fields.Date(string="Date",default=datetime.today())
     pay_request_id = fields.Many2one('payment.request',string="Payment Request",default = lambda self: self._context.get('pay_request_id'))
-    destination_account_id = fields.Many2one('account.account',string="Destination Account")
+    destination_account_id = fields.Many2one('account.account',string="Destination Account",domain="[('user_type_id.type', 'in', ('receivable', 'payable')), ('company_id', '=', company_id)]")
     ref = fields.Char(string="Memo")
     partner_type = fields.Selection([
     ('customer', 'Customer'),

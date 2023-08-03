@@ -9,8 +9,10 @@
                 <form string="Register Payment">
                     <group>
                     <group>
+                        <field name="company_id" invisible="1"/>
                         <field name="journal"/>
                         <field name="destination_account_id"/>
+                        <field name="partner_type"/>
                         <field name="ref"/> 
                     </group>
                     <group>

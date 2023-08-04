@@ -26,7 +26,7 @@ class PaymentRequest(models.Model):
             self: self.env.user.company_id.currency_id.id,
             readonly=True)
 
-    state = fields.Selection(string="State",selection=[('payment_request','Payment Requested'),('payment_draft','Payment Drafted'),('paid','Paid'),('reject','Rejected'),('cancel','Cancelled')])
+    state = fields.Selection(string="State",selection=[('payment_request','Payment Requested'),('approved','Head Approved'),('payment_draft','Payment Drafted'),('paid','Paid'),('reject','Rejected')],default='payment_request')
     description = fields.Text(string="Description")
     account_name = fields.Char(string="Account Name")
     account_no = fields.Char(string="Account No")
@@ -34,7 +34,17 @@ class PaymentRequest(models.Model):
     bank_name = fields.Char(string="Bank Name")
     bank_branch = fields.Char(string="Bank Branch")
     payments = fields.One2many('account.payment','payment_request_id',string="Payments")
-    
+    def _compute_hide_register_pay_button(self):
+        for record in self:
+            record.hide_register_pay_button = (record.state in ('paid','reject') ) or ( not record.is_account_head and (record.state not in ('payment_draft','approved')) )
+    hide_register_pay_button = fields.Boolean(compute="_compute_hide_register_pay_button",default=True)
+
+    def _compute_is_account_head(self):
+        for record in self:
+            record.is_account_head = self.env.user.has_group('faculty.group_accounting_manager')
+    is_account_head = fields.Boolean(string="Is Accounting Head",compute="_compute_is_account_head")
+
+
     def _compute_payment_count(self):
         for record in self:
             record.payment_count = len(record.payments)
@@ -45,6 +55,9 @@ class PaymentRequest(models.Model):
         vals['state'] = 'payment_request'
         result = super(PaymentRequest, self).create(vals)
         return result
+    
+    def head_approve(self):
+        self.state = 'approved'
 
     def register_payment(self):
         # Display a popup with the entered details

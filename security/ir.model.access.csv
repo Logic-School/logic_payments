@@ -1,6 +1,7 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 
 access_payment_req,access_payment,model_payment_request,base.group_user,1,1,1,1
-access_pay_wizard_account,access_details,model_payment_register_wizard,faculty.group_accounting_manager,1,1,1,0
+access_pay_wizard_account,access_pay_wizard_account,model_payment_register_wizard,faculty.group_accounting_manager,1,1,1,0
+access_pay_wizard_account_head,access_pay_wizard_account_head,model_payment_register_wizard,logic_payments.group_faculty_accountant,1,1,1,0
 
 

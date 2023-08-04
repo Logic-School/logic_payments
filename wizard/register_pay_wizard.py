@@ -28,7 +28,7 @@ class  PayWizard(models.TransientModel):
     , default=lambda self: self._context.get('partner_type'), tracking=True, required=True)
     def action_create_payments(self):
         # need to add methods to create payment record in db
-        self.env['account.payment'].sudo().create({
+        payment_obj = self.env['account.payment'].create({
             'payment_type': 'outbound',
             'partner_type': self.partner_type,
             'payment_request_id':self.payment_request_id.id,
@@ -39,9 +39,11 @@ class  PayWizard(models.TransientModel):
             'is_internal_transfer':False,
 
         })
+        payment_obj.action_post()
+
         
         self.payment_request_id.write({
-            'state':'payment_draft',
+            'state':'paid',
         })
         # pay_req_objs = self.env['payment.request'].search([('id','=',self.payment_request_id.id)],limit=1)
         # if self.payment_request_id.source_type =='sfc':

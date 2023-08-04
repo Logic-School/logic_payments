@@ -2,7 +2,7 @@
     'name': "Payments",
     'version': "14.0.1.0",
     'sequence': "0",
-    'depends': ['base', 'account','logic_base','logic_sfc'],
+    'depends': ['base', 'account','logic_base','faculty','logic_sfc'],
     'data': [
         'security/ir.model.access.csv',
         'security/security.xml',

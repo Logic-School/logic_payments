@@ -17,7 +17,7 @@ class  PayWizard(models.TransientModel):
             readonly=True)
     amount = fields.Monetary(string="Amount",default=lambda self: self._context.get('amount'))
     date = fields.Date(string="Date",default=datetime.today())
-    pay_request_id = fields.Many2one('payment.request',string="Payment Request",default = lambda self: self._context.get('pay_request_id'))
+    payment_request_id = fields.Many2one('payment.request',string="Payment Request",default = lambda self: self.env.context.get('active_id'))
     destination_account_id = fields.Many2one('account.account',string="Destination Account",domain="[('user_type_id.type', 'in', ('receivable', 'payable')), ('company_id', '=', company_id)]")
     ref = fields.Char(string="Memo")
     partner_type = fields.Selection([
@@ -31,23 +31,27 @@ class  PayWizard(models.TransientModel):
         self.env['account.payment'].sudo().create({
             'payment_type': 'outbound',
             'partner_type': self.partner_type,
+            'payment_request_id':self.payment_request_id.id,
             'destination_account_id': self.destination_account_id.id,
             'amount': self.amount,
             'ref': self.ref,
             'date': self.date,
-            'is_internal_transfer':False
+            'is_internal_transfer':False,
 
         })
         
-        pay_req_objs = self.env['payment.request'].search([('id','=',self.pay_request_id.id)],limit=1)
-        if self.pay_request_id.source_type =='sfc':
-            sfc_objs = self.env['student.faculty'].search([('id','=',self.pay_request_id.sfc_source.id)],limit=1)
-            if sfc_objs:
-                sfc_objs[0].write({
-                    'state':'paid'
-                })
-        if pay_req_objs:
-            pay_req_objs[0].write({
-                'state':'paid',
-            })
+        self.payment_request_id.write({
+            'state':'payment_draft',
+        })
+        # pay_req_objs = self.env['payment.request'].search([('id','=',self.payment_request_id.id)],limit=1)
+        # if self.payment_request_id.source_type =='sfc':
+        #     sfc_objs = self.env['student.faculty'].search([('id','=',self.payment_request_id.sfc_source.id)],limit=1)
+        #     if sfc_objs:
+        #         sfc_objs[0].write({
+        #             'state':'paid'
+        #         })
+        # if pay_req_objs:
+        #     pay_req_objs[0].write({
+        #         'state':'paid',
+        #     })
         

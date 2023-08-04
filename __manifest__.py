@@ -5,7 +5,9 @@
     'depends': ['base', 'account','logic_base','logic_sfc'],
     'data': [
         'security/ir.model.access.csv',
+        'security/security.xml',
         'views/payment_request_views.xml',
+        'views/account_payment_views.xml',
         'wizard/register_pay_wizard_views.xml',
     ],
     'demo': [],

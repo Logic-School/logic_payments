@@ -1,29 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <record model="ir.actions.act_window" id="details_payment_request_action">
-        <field name="name">Payments</field>
+        <field name="name">Payment Requests</field>
         <field name="res_model">payment.request</field>
         <field name="view_mode">tree,form</field>
     </record>
 
-    <menuitem name="Payments" id="menu_payment_request"
+    <record id="payments_pay_req_action" model="ir.actions.act_window">
+        <field name="name">Payments</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">account.payment</field>
+        <field name="view_mode">tree,form</field>
+        <!-- <field name="view_id" eval="False"/> -->
+        <!-- <field name="search_view_id" ref="mrp.view_mrp_production_filter"/> -->
+        <field name="context">{'default_pay_req_id': active_id}</field>
+        <field name="domain">[('payment_request_id', '=', active_id)]</field>
+    </record>
+
+    <menuitem name="Payments" id="menu_payment_parent"
               action="details_payment_request_action"
               sequence="6"/>
-    <menuitem name="Payments" id="menu_payment_request_1"
+    <menuitem name="Requests" id="menu_payment_request_1"
               action="details_payment_request_action"
-              parent="menu_payment_request"
+              parent="menu_payment_parent"
               sequence="1"/>
+    <menuitem name="Payments" id="menu_payment_payments_1"
+              action="account.action_account_payments"
+              parent="menu_payment_parent"
+              sequence="2"/>
 
 
     <record id="payment_request_tree_view" model="ir.ui.view">
-        <field name="name">Payments</field>
+        <field name="name">Payment Requests</field>
         <field name="model">payment.request</field>
         <field name="type">tree</field>
         <field name="arch" type="xml">
             <tree>
-                <field name="sfc_source"/>
+                <field name="name"/>
+                <field name="source_type"/>
                 <field name="source_user"/>
                 <field name="amount"/>
+                <field name="state" decoration-success="state == 'paid'" decoration-info="state == 'payment_draft'" decoration-warning="state == 'payment_request'" decoration-danger="state == 'reject'" widget="badge" />
             </tree>
         </field>
     </record>
@@ -36,14 +53,30 @@
             <form string="Payment Request">
                 <header>
                     <!-- <button name="submit_for_payment" groups="faculty.coordinator_user" string="Submit for Payment" help="Click here to submit the draft for payment" type="object" class="oe_highlight" attrs="{'invisible':[('state','!=','draft')]}"/> -->
-                    <button name="register_payment" groups="faculty.group_accounting_manager" string="Register Payment" help="Click here to register the payment record" type="object" class="oe_highlight" attrs="{'invisible':[('state','!=','submit_payment')]}"/>
-                    <button name="reject_payment" groups="faculty.group_accounting_manager" string="Reject" help="Click here to reject the payment request" type="object" class="btn-danger" attrs="{'invisible':[('state','!=','submit_payment')]}"/>
+                    <button name="register_payment" groups="faculty.group_accounting_manager" string="Register Payment" help="Click here to register the payment record" type="object" class="oe_highlight" attrs="{'invisible':[('state','in',('paid','reject') )]}"/>
+                    <button name="reject_payment" groups="faculty.group_accounting_manager" string="Reject" help="Click here to reject the payment request" type="object" class="btn-danger" attrs="{'invisible':[('state','in',('paid','reject') )]}"/>
                     <!-- <button name="reset_to_draft" string="Reset to Draft" help="Click here to reset the record to draft state" type="object" class="btn-warning" attrs="{'invisible':[('state','!=','submit_payment')]}"/> -->
-                    <field name="state" widget="statusbar" statusbar_visible="submit_payment,paid,reject"/>
+                    <field name="state" widget="statusbar" statusbar_visible="payment_request,payment_draft,paid,reject,cancel"/>
+                
                 </header>
+
                 <sheet>
+                    <div class="oe_button_box" name="button_box" groups="base.group_user">
+                        <button class="oe_stat_button" name="%(logic_payments.payments_pay_req_action)d" type="action" icon="fa-rupee">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="payment_count" nolabel="1"/>
+                                </span>
+                                <span class="o_stat_text">
+                                    Payments
+                                </span>
+                            </div>
+                        </button>
+                    </div>
                     <widget name="web_ribbon" text="PAID" bg_color="bg-success" attrs="{'invisible':[('state','!=','paid')]}"/>
                     <widget name="web_ribbon" text="REJECTED" bg_color="bg-danger" attrs="{'invisible':[('state','!=','reject')]}"/>
+                    <widget name="web_ribbon" text="PAYMENT DRAFTED" bg_color="bg-info" attrs="{'invisible':[('state','!=','payment_draft')]}"/>
+
                     <group>
                         <group>
                             <field name="source_type"/>

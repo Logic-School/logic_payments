@@ -40,6 +40,9 @@ class  PayWizard(models.TransientModel):
 
         })
         payment_obj.action_post()
+        activity_ids = self.env['mail.activity'].search([('payment_request','=',self.payment_request_id.id)],order='create_date asc')
+        activity_id = activity_ids[-1]
+        activity_id.action_feedback(feedback=f'Registered Payment of {activity_id.payment_request.currency_id.symbol}{activity_id.payment_request.amount}')
 
         
         self.payment_request_id.write({

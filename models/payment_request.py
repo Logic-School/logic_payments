@@ -1,7 +1,10 @@
 from odoo  import fields, api, models
+from odoo.exceptions import UserError
 
 class PaymentRequest(models.Model):
     _name = "payment.request"
+    _description = "Payment Request"
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     # _rec_name="number"
     def _compute_number(self):
         for record in self:
@@ -14,6 +17,22 @@ class PaymentRequest(models.Model):
     amount = fields.Monetary(string="Amount")
     payment_expect_date = fields.Date(string="Expected Date")
     payment_date = fields.Date(string="Date of Payment", readonly=True)
+    def get_default_acc_manager(self):
+        if self.env.user.has_group('faculty.group_accounting_manager'):
+            return self.env.user.id
+        else:
+            return False
+    def get_acc_head_domain(self):
+        return [('id', 'in', self.env.ref('faculty.group_accounting_manager').users.ids)]
+    def get_acc_domain(self):
+        return [('id', 'in', self.env.ref('logic_payments.group_faculty_accountant').users.ids)]
+    accounting_head = fields.Many2one('res.users',string="Accounting Manager",domain=get_acc_head_domain, default=get_default_acc_manager)
+    accountant = fields.Many2one('res.users', string="Accountant",readonly=True)
+    # @api.multi
+    # @api.onchange('source_type')
+    # def onchange_company_id(self):
+    #     users = self.env.ref('group_accounting_manager').users.ids
+    #     return {'domain': {'accounting_head': [('id', 'in', users.ids)]}}
     company_id = fields.Many2one(
             'res.company', store=True, copy=False,
             string="Company",
@@ -26,7 +45,7 @@ class PaymentRequest(models.Model):
             self: self.env.user.company_id.currency_id.id,
             readonly=True)
 
-    state = fields.Selection(string="State",selection=[('payment_request','Payment Requested'),('approved','Head Approved'),('payment_draft','Payment Drafted'),('paid','Paid'),('reject','Rejected')],default='payment_request')
+    state = fields.Selection(string="State",selection=[('draft','Draft'),('payment_request','Payment Requested'),('approved','Head Approved'),('payment_draft','Payment Drafted'),('paid','Paid'),('reject','Rejected')])
     description = fields.Text(string="Description")
     account_name = fields.Char(string="Account Name")
     account_no = fields.Char(string="Account No")
@@ -52,12 +71,39 @@ class PaymentRequest(models.Model):
     
     @api.model
     def create(self, vals):
-        vals['state'] = 'payment_request'
+        vals['state'] = 'draft'
         result = super(PaymentRequest, self).create(vals)
         return result
     
+    def action_confirm(self):
+        if not self.accounting_head:
+            raise UserError("An Accounting manager must be set before confirming a payment request!")
+        else:
+            self.activity_schedule(
+                'logic_payments.mail_activity_type_pay_request',
+                user_id = self.accounting_head.id,
+                payment_request = self.id,
+                date_deadline=self.payment_expect_date,
+                is_pay_approve_request=True,
+                summary=f"Payment Request of {self.currency_id.symbol}{self.amount} from {self.env.user.name}"
+            )
+            self.accountant = self.env.user.id
+            self.state = 'payment_request'
+
     def head_approve(self):
+        activity_ids = self.env['mail.activity'].search([('payment_request','=',self.id)],order='create_date asc')
+        activity_id = activity_ids[-1]
+        activity_id.action_feedback(feedback='Approved')
         self.state = 'approved'
+        
+        self.activity_schedule(
+            'logic_payments.mail_activity_type_pay_request',
+            user_id = self.accountant.id,
+            payment_request = self.id,
+            date_deadline=self.payment_expect_date,
+            is_pay_approve_request=False,
+            summary=f"Register Payment of {self.currency_id.symbol}{self.amount}"
+        )
 
     def register_payment(self):
         # Display a popup with the entered details
@@ -74,7 +120,31 @@ class PaymentRequest(models.Model):
             'context': {'amount': self.amount,'payment_request_id':self.id ,'partner_type':partner_type}
         }
     def reject_payment(self):
+        if self.state=='approved' and not self.env.user.has_group('faculty.group_accounting_manager'):
+            raise UserError("Only an Accounting Manager can reject an approved payment request")
+        else:
+            activity_ids = self.env['mail.activity'].search([('user_id','=',self.accounting_head.id),('payment_request','=',self.id),('is_pay_approve_request','=',True)],order='create_date asc')
+            if activity_ids:
+                activity_id = activity_ids[-1]
+                activity_id.action_feedback(feedback='Rejected')
+                self.state = 'reject'
+                self.sfc_source.write({
+                    'state':'reject'
+                })
+            else:
+                self.activity_schedule(
+                    'logic_payments.mail_activity_type_pay_request',
+                    user_id = self.env.user.id,
+                    payment_request = self.id,
+                    date_deadline=self.payment_expect_date,
+                    is_pay_approve_request=True,
+                    summary=f"Payment Request of {self.currency_id.symbol}{self.amount} from {self.source_user.name}"
+                )
+                activity_ids = self.env['mail.activity'].search([('user_id','=',self.env.user.id),('payment_request','=',self.id)],order='create_date asc')
+                activity_id = activity_ids[-1]
+                activity_id.action_feedback(feedback='Rejected')
         self.state = 'reject'
-        self.sfc_source.write({
-            'state':'reject'
-        })
+        if self.sfc_source:
+            self.sfc_source.write({
+                'state':'reject'
+            })

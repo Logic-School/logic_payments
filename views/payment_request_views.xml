@@ -19,15 +19,18 @@
 
     <menuitem name="Payments" id="menu_payment_parent"
               action="details_payment_request_action"
-              sequence="6"/>
+              sequence="6"
+              groups="faculty.group_accounting_manager,logic_payments.group_faculty_accountant"/>
     <menuitem name="Requests" id="menu_payment_request_1"
               action="details_payment_request_action"
               parent="menu_payment_parent"
-              sequence="1"/>
+              sequence="1"
+              groups="faculty.group_accounting_manager,logic_payments.group_faculty_accountant"/>
     <menuitem name="Payments" id="menu_payment_payments_1"
               action="account.action_account_payments"
               parent="menu_payment_parent"
-              sequence="2"/>
+              sequence="2"
+              groups="faculty.group_accounting_manager,logic_payments.group_faculty_accountant"/>
 
 
     <record id="payment_request_tree_view" model="ir.ui.view">
@@ -40,7 +43,7 @@
                 <field name="source_type"/>
                 <field name="source_user"/>
                 <field name="amount"/>
-                <field name="state" decoration-success="state == 'paid'" decoration-info="state == 'payment_draft'" decoration-warning="state == 'payment_request'" decoration-danger="state == 'reject'" widget="badge" />
+                <field name="state" string="status" decoration-success="state == 'paid'" decoration-info="state == 'payment_draft'" decoration-warning="state == 'payment_request'" decoration-danger="state == 'reject'" widget="badge" />
             </tree>
         </field>
     </record>
@@ -53,17 +56,18 @@
             <form string="Payment Request">
                 <header>
                     <!-- <button name="submit_for_payment" groups="faculty.coordinator_user" string="Submit for Payment" help="Click here to submit the draft for payment" type="object" class="oe_highlight" attrs="{'invisible':[('state','!=','draft')]}"/> -->
+                    <button name="action_confirm" groups="faculty.group_accounting_manager,logic_payments.group_faculty_accountant" string="Confirm" help="Click here to confirm the payment request" type="object" class="oe_highlight" attrs="{'invisible':[('state','!=','draft')]}"/>
                     <button name="register_payment" groups="faculty.group_accounting_manager,logic_payments.group_faculty_accountant" string="Register Payment" help="Click here to register the payment record" type="object" class="oe_highlight" attrs="{'invisible':[('hide_register_pay_button','=',True)]}"/>
                     <button name="head_approve" groups="faculty.group_accounting_manager" string="Approve" help="Click here to approve the payment request " type="object" class="oe_highlight" attrs="{'invisible': [('state','!=','payment_request')]}" />
                     <button name="reject_payment" groups="faculty.group_accounting_manager" string="Reject" help="Click here to reject the payment request" type="object" class="btn-danger" attrs="{'invisible':[('state','in',('paid','reject') )]}"/>
 
                     <!-- <button name="reset_to_draft" string="Reset to Draft" help="Click here to reset the record to draft state" type="object" class="btn-warning" attrs="{'invisible':[('state','!=','submit_payment')]}"/> -->
-                    <field name="state" widget="statusbar" statusbar_visible="payment_request,approved,payment_draft,paid,reject"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,payment_request,approved,payment_draft,paid,reject"/>
                 
                 </header>
 
                 <sheet>
-                    <div class="oe_button_box" name="button_box" groups="base.group_user">
+                    <div class="oe_button_box" name="button_box" groups="base.group_user" attrs="{'invisible': [('payment_count','=',0)]}">
                         <button class="oe_stat_button" name="%(logic_payments.payments_pay_req_action)d" type="action" icon="fa-rupee">
                             <div class="o_field_widget o_stat_info">
                                 <span class="o_stat_value">
@@ -84,6 +88,8 @@
                             <field name="hide_register_pay_button"/>
                             <field name="is_account_head" />
                             <field name="source_type"/>
+                            <field name="accountant" attrs="{'invisible': [('accountant','=',False)]}"/>
+                            <field name="accounting_head" />
                             <field name="sfc_source" attrs="{'invisible':[('source_type','!=','sfc')]}"/>
                             <field name="source_user"/>
                             <field name="description"/>
@@ -119,6 +125,11 @@
                         </notebook>
                     </group>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids" options="{'post_refresh': 'recipients'}"/>
+                </div>
             </form>
         </field>
     </record>

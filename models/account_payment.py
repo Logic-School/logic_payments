@@ -23,14 +23,16 @@ class AccountPaymentInherit(models.Model):
     
     def action_post(self):
         result = super(AccountPaymentInherit, self).action_post()
-        self.payment_request_id.write({
-            'state':'paid',
-            'payment_date':datetime.today()
-        })
-        if self.payment_request_id.sfc_source:
-            self.payment_request_id.sfc_source.write({
-                'state':'paid'
+        if self.payment_request_id:
+            self.payment_request_id.write({
+                'state':'paid',
+                'payment_date':datetime.today()
             })
+            if self.payment_request_id.sfc_source:
+                self.payment_request_id.sfc_source.write({
+                    'state':'paid'
+                })
+
         return result
     def action_draft(self):
         result = super(AccountPaymentInherit, self).action_draft()

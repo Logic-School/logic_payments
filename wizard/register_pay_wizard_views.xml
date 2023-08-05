@@ -22,7 +22,7 @@
                     </group>
                     </group>
                     <footer>
-                        <button string="Create Payment" name="action_create_payments" type="object" class="oe_highlight"/>
+                        <button string="Create and Post Payment" name="action_create_payments" type="object" help="This will create a payment record and post it to the ledger" class="oe_highlight"/>
                         <button string="Cancel" class="btn btn-secondary" special="cancel"/>
                     </footer>
                 </form>

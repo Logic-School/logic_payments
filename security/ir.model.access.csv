@@ -4,4 +4,4 @@ access_payment_req,access_payment,model_payment_request,base.group_user,1,1,1,1
 access_pay_wizard_account,access_pay_wizard_account,model_payment_register_wizard,faculty.group_accounting_manager,1,1,1,0
 access_pay_wizard_account_head,access_pay_wizard_account_head,model_payment_register_wizard,logic_payments.group_faculty_accountant,1,1,1,0
 
-
+access_sfc_account,access_details,logic_sfc.model_student_faculty,logic_payments.group_faculty_accountant,0,1,0,0

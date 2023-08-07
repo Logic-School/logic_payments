@@ -24,7 +24,7 @@
         <field name="context">{
             'default_payment_type': 'outbound',
             'default_partner_type': 'vendor',
-            'search_default_outbound_filter': 1,
+            <!-- 'search_default_outbound_filter': 1, -->
             'default_move_journal_types': ('bank', 'cash'),
         }</field>
         <field name="view_id" ref="account.view_account_payment_tree"/>
@@ -153,6 +153,23 @@
                     <field name="message_ids" options="{'post_refresh': 'recipients'}"/>
                 </div>
             </form>
+        </field>
+    </record>
+
+    <record id="payment_request_search" model="ir.ui.view">
+        <field name="name">payment.request.search</field>
+        <field name="model">payment.request</field>
+        <field name="arch" type="xml">
+            <search>
+                <filter string="Head Approved" name="active" domain="[('state', '=','approved')]"/>
+                <filter string="Paid" name="active" domain="[('state', '=','paid')]"/>
+                <filter string="Rejected" name="active" domain="[('state', '=','reject')]"/>
+                <filter string="Approval Requested" name="active" domain="[('state', '=','payment_request')]"/>
+                <filter string="Drafted" name="active" domain="[('state', '=','draft')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
         </field>
     </record>
 </odoo>

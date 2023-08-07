@@ -12,9 +12,29 @@
         <field name="res_model">account.payment</field>
         <field name="view_mode">tree,form</field>
         <!-- <field name="view_id" eval="False"/> -->
-        <!-- <field name="search_view_id" ref="mrp.view_mrp_production_filter"/> -->
-        <field name="context">{'default_pay_req_id': active_id}</field>
+        <!-- <field name="search_view_id" ref="account.outbound_filter"/> -->
+        <field name="context">{'create':0,'default_pay_req_id': active_id}</field>
         <field name="domain">[('payment_request_id', '=', active_id)]</field>
+    </record>
+
+    <record id="action_account_payments_copy" model="ir.actions.act_window">
+        <field name="name">Payments</field>
+        <field name="res_model">account.payment</field>
+        <field name="view_mode">tree,kanban,form,graph</field>
+        <field name="context">{
+            'default_payment_type': 'outbound',
+            'default_partner_type': 'vendor',
+            'search_default_outbound_filter': 1,
+            'default_move_journal_types': ('bank', 'cash'),
+        }</field>
+        <field name="view_id" ref="account.view_account_payment_tree"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+              Register a payment
+            </p><p>
+              Payments are used to register liquidity movements. You can process those payments by your own means or by using installed facilities.
+            </p>
+        </field>
     </record>
 
     <menuitem name="Payments" id="menu_payment_parent"
@@ -27,7 +47,7 @@
               sequence="1"
               groups="faculty.group_accounting_manager,logic_payments.group_faculty_accountant"/>
     <menuitem name="Payments" id="menu_payment_payments_1"
-              action="account.action_account_payments"
+              action="action_account_payments_copy"
               parent="menu_payment_parent"
               sequence="2"
               groups="faculty.group_accounting_manager,logic_payments.group_faculty_accountant"/>
@@ -43,7 +63,9 @@
                 <field name="source_type"/>
                 <field name="source_user"/>
                 <field name="amount"/>
-                <field name="state" string="status" decoration-success="state == 'paid'" decoration-info="state == 'payment_draft'" decoration-warning="state == 'payment_request'" decoration-danger="state == 'reject'" widget="badge" />
+                <field name="payment_expect_date"/>
+                <field name="payment_date"/>
+                <field name="state" string="Status" decoration-success="state == 'paid'" decoration-info="state == 'payment_draft'" decoration-warning="state == 'payment_request'" decoration-danger="state == 'reject'" widget="badge" />
             </tree>
         </field>
     </record>
@@ -59,7 +81,7 @@
                     <button name="action_confirm" groups="faculty.group_accounting_manager,logic_payments.group_faculty_accountant" string="Confirm" help="Click here to confirm the payment request" type="object" class="oe_highlight" attrs="{'invisible':[('state','!=','draft')]}"/>
                     <button name="register_payment" groups="faculty.group_accounting_manager,logic_payments.group_faculty_accountant" string="Register Payment" help="Click here to register the payment record" type="object" class="oe_highlight" attrs="{'invisible':[('hide_register_pay_button','=',True)]}"/>
                     <button name="head_approve" groups="faculty.group_accounting_manager" string="Approve" help="Click here to approve the payment request " type="object" class="oe_highlight" attrs="{'invisible': [('state','!=','payment_request')]}" />
-                    <button name="reject_payment" groups="faculty.group_accounting_manager" string="Reject" help="Click here to reject the payment request" type="object" class="btn-danger" attrs="{'invisible':[('state','in',('paid','reject') )]}"/>
+                    <button name="reject_payment" groups="faculty.group_accounting_manager" string="Reject" help="Click here to reject the payment request" type="object" class="btn-danger" attrs="{'invisible':[('state','in',(False,'paid','reject') )]}"/>
 
                     <!-- <button name="reset_to_draft" string="Reset to Draft" help="Click here to reset the record to draft state" type="object" class="btn-warning" attrs="{'invisible':[('state','!=','submit_payment')]}"/> -->
                     <field name="state" widget="statusbar" statusbar_visible="draft,payment_request,approved,payment_draft,paid,reject"/>
@@ -85,17 +107,17 @@
 
                     <group>
                         <group>
-                            <field name="hide_register_pay_button"/>
-                            <field name="is_account_head" />
-                            <field name="source_type"/>
-                            <field name="accountant" attrs="{'invisible': [('accountant','=',False)]}"/>
-                            <field name="accounting_head" />
-                            <field name="sfc_source" attrs="{'invisible':[('source_type','!=','sfc')]}"/>
-                            <field name="source_user"/>
-                            <field name="description"/>
+                            <field name="hide_register_pay_button" invisible="1"/>
+                            <field name="is_account_head" invisible="1"/>
+                            <field name="source_type" attrs="{'readonly':[('state','not in',(False,'draft'))]}"/>
+                            <field name="accountant" attrs="{'invisible': [('accountant','=',False)], 'readonly':[('state','not in',(False,'draft'))]}" />
+                            <field name="accounting_head" attrs="{'readonly':[('state','not in',(False,'draft'))]}"/>
+                            <field name="sfc_source" attrs="{'invisible':[('source_type','!=','sfc')], 'readonly':[('state','not in',(False,'draft'))]}" />
+                            <field name="source_user" attrs="{'readonly':[('state','not in',(False,'draft'))], 'invisible':[('source_type','in',(False,'other'))] }"/>
+                            <field name="description" attrs="{'readonly':[('state','not in',(False,'draft'))]}"/>
                         </group>
                         <group>
-                            <field name="payment_expect_date"/>
+                            <field name="payment_expect_date" attrs="{'readonly':[('state','not in',(False,'draft'))]}"/>
                             <field name="payment_date"/>
                         </group>
                     </group>
@@ -116,7 +138,7 @@
                                             <div class="oe_subtotal_footer_separator oe_inline o_td_label">
                                                 <label for="amount"/>
                                             </div>
-                                            <field name="amount" nolabel="1" class="oe_subtotal_footer_separator" widget="monetary"/>
+                                            <field name="amount" nolabel="1" attrs="{'readonly':[('state','not in',(False,'draft'))]}" class="oe_subtotal_footer_separator" widget="monetary"/>
                                         </group>
                                         <div class="oe_clear"/>
                                     </group>

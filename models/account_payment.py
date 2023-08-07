@@ -6,7 +6,7 @@ class AccountPaymentInherit(models.Model):
     partner_type = fields.Selection([
         ('customer', 'Customer'),
         ('supplier', 'Vendor'),
-        ('student', 'Student'),
+        ('sfc', 'SFC'),
         ('employee','Employee'),
     ], default='customer', tracking=True, required=True)
     
@@ -18,7 +18,7 @@ class AccountPaymentInherit(models.Model):
     
     def _prepare_payment_display_name(self):
         result = super(AccountPaymentInherit,self)._prepare_payment_display_name()
-        result['outbound-student'] = _('Student Payment')
+        result['outbound-sfc'] = _('SFC Payment')
         return result
     
     def action_post(self):

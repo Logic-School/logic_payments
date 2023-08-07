@@ -23,7 +23,7 @@ class  PayWizard(models.TransientModel):
     partner_type = fields.Selection([
     ('customer', 'Customer'),
     ('supplier', 'Vendor'),
-    ('student', 'Student'),
+    ('sfc', 'SFC'),
     ('employee','Employee'),]
     , default=lambda self: self._context.get('partner_type'), tracking=True, required=True)
     def action_create_payments(self):
@@ -41,10 +41,13 @@ class  PayWizard(models.TransientModel):
         })
         payment_obj.action_post()
         activity_ids = self.env['mail.activity'].search([('payment_request','=',self.payment_request_id.id)],order='create_date asc')
-        activity_id = activity_ids[-1]
-        activity_id.action_feedback(feedback=f'Registered Payment of {activity_id.payment_request.currency_id.symbol}{activity_id.payment_request.amount}')
+        if activity_ids:
+            activity_id = activity_ids[-1]
+            activity_id.action_feedback(feedback=f'Registered Payment of {activity_id.payment_request.currency_id.symbol}{activity_id.payment_request.amount}')
+        # need to handle condition where there is no activity present 
+        pass
 
-        
+            
         self.payment_request_id.write({
             'state':'paid',
         })

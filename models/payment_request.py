@@ -11,9 +11,9 @@ class PaymentRequest(models.Model):
             zeroes = "0"*(5 - len(str(record.id)))
             record.name = "PAY-RQ-"+str(record.create_date.year)+"/"+str(record.create_date.month)+"/"+zeroes+str(record.id)
     name=fields.Char(string="Number",compute="_compute_number")
-    source_type = fields.Selection(selection=[('other','Other'),('advance','Advance'),('sfc','Student Faculty Club')],string="Source Type")
+    source_type = fields.Selection(selection=[('other','Other'),('advance','Advance'),('sfc','Student Faculty Club')],string="Source Type", required=True)
     sfc_source = fields.Many2one('student.faculty',string="SFC Source",readonly=True)
-    source_user = fields.Many2one('res.users',string="Source User", default=lambda self: self.env.user)
+    source_user = fields.Many2one('res.users',string="Source User", default=lambda self: self.env.user, readonly=True)
     amount = fields.Monetary(string="Amount")
     payment_expect_date = fields.Date(string="Expected Date")
     payment_date = fields.Date(string="Date of Payment", readonly=True)
@@ -78,6 +78,8 @@ class PaymentRequest(models.Model):
     def action_confirm(self):
         if not self.accounting_head:
             raise UserError("An Accounting manager must be set before confirming a payment request!")
+        elif not self.payment_expect_date:
+            raise UserError("You have to set an expected payment date before confirming the request")
         else:
             self.activity_schedule(
                 'logic_payments.mail_activity_type_pay_request',
@@ -108,7 +110,7 @@ class PaymentRequest(models.Model):
     def register_payment(self):
         # Display a popup with the entered details
         if self.sfc_source:
-            partner_type = 'student'
+            partner_type = 'sfc'
         else:
             partner_type = False
         return {
@@ -123,7 +125,7 @@ class PaymentRequest(models.Model):
         if self.state=='approved' and not self.env.user.has_group('faculty.group_accounting_manager'):
             raise UserError("Only an Accounting Manager can reject an approved payment request")
         else:
-            activity_ids = self.env['mail.activity'].search([('user_id','=',self.accounting_head.id),('payment_request','=',self.id),('is_pay_approve_request','=',True)],order='create_date asc')
+            activity_ids = self.env['mail.activity'].search([('user_id','=',self.accountant.id),('payment_request','=',self.id)],order='create_date asc')
             if activity_ids:
                 activity_id = activity_ids[-1]
                 activity_id.action_feedback(feedback='Rejected')
@@ -138,7 +140,7 @@ class PaymentRequest(models.Model):
                     payment_request = self.id,
                     date_deadline=self.payment_expect_date,
                     is_pay_approve_request=True,
-                    summary=f"Payment Request of {self.currency_id.symbol}{self.amount} from {self.source_user.name}"
+                    summary=f"Payment Request of {self.currency_id.symbol}{self.amount} from {self.accountant.name}"
                 )
                 activity_ids = self.env['mail.activity'].search([('user_id','=',self.env.user.id),('payment_request','=',self.id)],order='create_date asc')
                 activity_id = activity_ids[-1]

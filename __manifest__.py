@@ -13,7 +13,7 @@
     ],
     'demo': [],
     'summary': "Payments",
-    'description': "",
+    'description': "Logic Payments",
     'installable': True,
     'auto_install': False,
     'license': "LGPL-3",

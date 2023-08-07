@@ -55,7 +55,7 @@ class PaymentRequest(models.Model):
     payments = fields.One2many('account.payment','payment_request_id',string="Payments")
     def _compute_hide_register_pay_button(self):
         for record in self:
-            record.hide_register_pay_button = (record.state in ('paid','reject') ) or ( not record.is_account_head and (record.state not in ('payment_draft','approved')) )
+            record.hide_register_pay_button = (record.state in ('draft','paid','reject') ) or ( not record.is_account_head and (record.state not in ('payment_draft','approved')) )
     hide_register_pay_button = fields.Boolean(compute="_compute_hide_register_pay_button",default=True)
 
     def _compute_is_account_head(self):

@@ -40,12 +40,12 @@ class  PayWizard(models.TransientModel):
 
         })
         payment_obj.action_post()
+        # set the last activity to registered
         activity_ids = self.env['mail.activity'].search([('payment_request','=',self.payment_request_id.id)],order='create_date asc')
         if activity_ids:
             activity_id = activity_ids[-1]
             activity_id.action_feedback(feedback=f'Registered Payment of {activity_id.payment_request.currency_id.symbol}{activity_id.payment_request.amount}')
         # need to handle condition where there is no activity present 
-        pass
 
             
         self.payment_request_id.write({

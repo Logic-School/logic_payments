@@ -81,6 +81,7 @@ class PaymentRequest(models.Model):
         elif not self.payment_expect_date:
             raise UserError("You have to set an expected payment date before confirming the request")
         else:
+            # create new activity for the accounting manager to approve the pay request
             self.activity_schedule(
                 'logic_payments.mail_activity_type_pay_request',
                 user_id = self.accounting_head.id,
@@ -93,11 +94,14 @@ class PaymentRequest(models.Model):
             self.state = 'payment_request'
 
     def head_approve(self):
+
+        # Change activity state of approval request to 'Approved' (and delete activity)
         activity_ids = self.env['mail.activity'].search([('payment_request','=',self.id)],order='create_date asc')
         activity_id = activity_ids[-1]
         activity_id.action_feedback(feedback='Approved')
         self.state = 'approved'
         
+        # Create new activity for the accountant to register the payment
         self.activity_schedule(
             'logic_payments.mail_activity_type_pay_request',
             user_id = self.accountant.id,
@@ -125,6 +129,7 @@ class PaymentRequest(models.Model):
         if self.state=='approved' and not self.env.user.has_group('faculty.group_accounting_manager'):
             raise UserError("Only an Accounting Manager can reject an approved payment request")
         else:
+            # retrieve the last pay request activity and set it to rejected (and delete it)
             activity_ids = self.env['mail.activity'].search([('user_id','=',self.accountant.id),('payment_request','=',self.id)],order='create_date asc')
             if activity_ids:
                 activity_id = activity_ids[-1]
@@ -134,6 +139,7 @@ class PaymentRequest(models.Model):
                     'state':'reject'
                 })
             else:
+                # if no approval request activity is present, create new activity and set it to rejected
                 self.activity_schedule(
                     'logic_payments.mail_activity_type_pay_request',
                     user_id = self.env.user.id,

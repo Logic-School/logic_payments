@@ -3,7 +3,7 @@
     'author': 'Rizwaan',
     'version': "14.0.1.0",
     'sequence': "0",
-    'depends': ['base','mail', 'account','logic_base','faculty','logic_sfc'],
+    'depends': ['base','mail', 'account','account_payment','logic_base','faculty','logic_sfc'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',

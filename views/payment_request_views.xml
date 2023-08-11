@@ -23,8 +23,7 @@
         <field name="view_mode">tree,kanban,form,graph</field>
         <field name="context">{
             'default_payment_type': 'outbound',
-            'default_partner_type': 'vendor',
-            <!-- 'search_default_outbound_filter': 1, -->
+            'default_partner_type': 'supplier',
             'default_move_journal_types': ('bank', 'cash'),
         }</field>
         <field name="view_id" ref="account.view_account_payment_tree"/>

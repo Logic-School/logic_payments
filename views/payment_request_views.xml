@@ -37,6 +37,7 @@
     </record>
 
     <menuitem name="Payments" id="menu_payment_parent"
+              web_icon="logic_payments/static/description/icon.png"
               action="details_payment_request_action"
               sequence="6"
               groups="faculty.group_accounting_manager,logic_payments.group_faculty_accountant"/>
